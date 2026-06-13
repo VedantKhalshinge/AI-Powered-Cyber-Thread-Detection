@@ -1,3 +1,11 @@
+# ==============================================================================
+# Copyright (c) 2026 Vedant Khalshinge. All Rights Reserved.
+# 
+# This file is part of the AI-Powered Cyber Threat Detection System.
+# Unauthorized copying of this file, via any medium, is strictly prohibited.
+# Proprietary and confidential.
+# ==============================================================================
+
 """
 NLP Alert Engine
 Uses Groq LLM (llama3-8b-8192) for alert summarization.
