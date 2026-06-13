@@ -2,6 +2,11 @@
 
 A full-stack, real-time cybersecurity platform combining ML-based threat detection and SIEM monitoring.
 
+## 📸 Project Demo & Interface
+> **Note to Vedant:** *Take a screenshot of your beautiful new dashboard and save it in the repository as `demo.png` to have it show up here!*
+
+![CyberShield Dashboard Demo](demo.png)
+
 ## Features
 
 ### Detection Engines
