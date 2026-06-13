@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberShield — AI Cybersecurity Platform</title>
+  <meta name="description" content="Cybersecurity threat detection and SIEM monitoring platform."/>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Scripts -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <link rel="stylesheet" href="/static/dashboard.css"/>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-logo">
+        <i data-lucide="shield-check" class="brand-icon"></i>
+      </div>
+      <div class="brand-text">
+        <h2>CyberShield</h2>
+        <span>Security Platform</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">MENU</div>
+      <button class="nav-btn active" id="navOverview" onclick="switchTab('overview', 'Dashboard')">
+        <i data-lucide="layout-dashboard"></i> Dashboard
+      </button>
+      <button class="nav-btn" id="navDetectors" onclick="switchTab('detectors', 'Threat Detection')">
+        <i data-lucide="scan-line"></i> Threat Detection
+      </button>
+      <button class="nav-btn" id="navMonitor" onclick="switchTab('monitor', 'Live Monitoring')">
+        <i data-lucide="activity"></i> Live Monitoring
+      </button>
+      <button class="nav-btn" id="navAlerts" onclick="switchTab('alerts', 'Alerts Feed')">
+        <i data-lucide="bell"></i> Alerts Feed
+        <span class="nav-badge" id="alertBadge">0</span>
+      </button>
+      
+      <div class="nav-section mt-auto">SYSTEM</div>
+      <button class="nav-btn" id="navHistory" onclick="switchTab('history', 'Scan History')">
+        <i data-lucide="history"></i> Scan History
+      </button>
+      <button class="nav-btn" id="navReports" onclick="switchTab('reports', 'Reports')">
+        <i data-lucide="file-text"></i> Reports
+      </button>
+      <button class="nav-btn" id="navSettings" onclick="switchTab('settings', 'Settings')">
+        <i data-lucide="settings"></i> Settings
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ═══════════════════════════════ MAIN WRAPPER ═══════════════════════════════ -->
+  <div class="main-wrapper">
+    
+    <!-- ═══════════════════════════════ NAVBAR ═══════════════════════════════ -->
+    <header class="top-navbar">
+      <div class="navbar-left">
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="navbar-center">
+        <div class="search-bar">
+          <i data-lucide="search" class="search-icon"></i>
+          <input type="text" placeholder="Search logs, IPs, or files..." disabled>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <div class="sys-status">
+          <div class="status-dot" id="statusDot"></div>
+          <span class="status-text" id="statusText">Connecting...</span>
+        </div>
+        <button class="icon-btn"><i data-lucide="bell"></i></button>
+        <div class="user-profile">
+          <div class="avatar">AD</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════ CONTENT ═══════════════════════════════ -->
+    <main class="main-content">
+
+      <!-- ──────────────── PANEL: OVERVIEW (DASHBOARD) ──────────────── -->
+      <section id="panelOverview" class="panel active">
+        
+        <!-- Top Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Network Integrity</span>
+              <i data-lucide="globe" class="stat-icon text-blue"></i>
+            </div>
+            <div class="stat-value" id="gaugeNetworkVal">100%</div>
+            <div class="stat-status" id="gaugeNetworkStatus">Normal</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Malware Protection</span>
+              <i data-lucide="shield-alert" class="stat-icon text-green"></i>
+            </div>
+            <div class="stat-value" id="gaugeMalwareVal">100%</div>
+            <div class="stat-status" id="gaugeMalwareStatus">Benign</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Phishing Filter</span>
+              <i data-lucide="mail-warning" class="stat-icon text-green"></i>
+            </div>
+            <div class="stat-value" id="gaugePhishingVal">100%</div>
+            <div class="stat-status" id="gaugePhishingStatus">Legitimate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">System Load</span>
+              <i data-lucide="cpu" class="stat-icon text-amber"></i>
+            </div>
+            <div class="stat-value" id="cpuVal">--%</div>
+            <div class="stat-status">CPU Usage</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Recent Threats Table -->
+          <div class="card col-span-2">
+            <div class="card-header border-b pb-4 mb-4">
+              <h3 class="card-title">Recent Threat Activity</h3>
+              <button class="btn btn-secondary btn-sm">View All</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Engine</th>
+                    <th>Result</th>
+                    <th>Confidence</th>
+                    <th>Top Indicator</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="recentDetectionsTbody">
+                  <tr><td colspan="5" class="empty-row">No threats detected today.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- System Status Details -->
+          <div class="card">
+            <div class="card-header border-b pb-4 mb-4">
+              <h3 class="card-title">System Status</h3>
+            </div>
+            <div class="sys-metrics-list">
+              <div class="sys-metric-item">
+                <div class="sys-metric-info">
+                  <span class="sys-metric-name">RAM Usage</span>
+                  <span class="sys-metric-val" id="ramVal">--%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill bg-blue" id="ramBarFill"></div></div>
+              </div>
+              <div class="sys-metric-item">
+                <div class="sys-metric-info">
+                  <span class="sys-metric-name">Disk Read</span>
+                  <span class="sys-metric-val" id="diskRVal">--</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill bg-amber" id="diskRBarFill"></div></div>
+              </div>
+              <div class="sys-metric-item">
+                <div class="sys-metric-info">
+                  <span class="sys-metric-name">Disk Write</span>
+                  <span class="sys-metric-val" id="diskWVal">--</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill bg-red" id="diskWBarFill"></div></div>
+              </div>
+              <div class="sys-metric-item mt-4 pt-4 border-t">
+                <div class="sys-metric-info">
+                  <span class="sys-metric-name">Active Processes</span>
+                  <span class="sys-metric-val text-bold" id="procVal">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ──────────────── PANEL: DETECTORS ──────────────── -->
+      <section id="panelDetectors" class="panel">
+        <div class="detectors-grid">
+
+          <!-- Malware Detection -->
+          <div class="card detector-card" id="detectorMalware">
+            <div class="card-header border-b pb-4 mb-4">
+              <div class="flex-align-center gap-3">
+                <div class="icon-box bg-blue-light text-blue"><i data-lucide="file-search"></i></div>
+                <div>
+                  <h3 class="card-title">Malware Analysis</h3>
+                  <p class="text-sm text-muted">Scan files for malicious patterns using ML</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mock Upload Box -->
+            <div class="upload-box" onclick="demoMalware()">
+              <i data-lucide="upload-cloud" class="upload-icon"></i>
+              <p class="upload-title">Click to upload or drag and drop</p>
+              <p class="upload-desc">PE, EXE, DLL (Max 50MB)</p>
+              <button class="btn btn-secondary mt-3">Select File</button>
+            </div>
+
+            <div class="form-grid mt-4">
+              <div class="form-group"><label>File Size (B)</label><input type="number" id="mal_file_size" value="245760" class="form-input"/></div>
+              <div class="form-group"><label>Sections</label><input type="number" id="mal_num_sections" value="5" class="form-input"/></div>
+              <div class="form-group"><label>Imports</label><input type="number" id="mal_num_imports" value="87" class="form-input"/></div>
+              <div class="form-group"><label>Entropy</label><input type="number" id="mal_entropy" value="5.8" step="0.1" class="form-input"/></div>
+              <div class="form-group"><label>Virtual Size</label><input type="number" id="mal_virtual_size" value="1048576" class="form-input"/></div>
+              <div class="form-group"><label>Suspicious APIs</label><input type="number" id="mal_suspicious_api" value="2" class="form-input"/></div>
+              
+              <div class="form-group">
+                <label>Overlay</label>
+                <select id="mal_has_overlay" class="form-input"><option value="0">No</option><option value="1">Yes</option></select>
+              </div>
+              <div class="form-group">
+                <label>Packer Detected</label>
+                <select id="mal_packer" class="form-input"><option value="0">No</option><option value="1">Yes</option></select>
+              </div>
+              <div class="form-group" style="display:none;"><input type="number" id="mal_num_exports" value="3"/></div>
+            </div>
+
+            <div class="detector-actions mt-5 pt-4 border-t">
+              <button class="btn btn-secondary" onclick="demoMalware()">Populate Demo</button>
+              <button class="btn btn-primary" id="btnMalware" onclick="runMalwareDetect()"><i data-lucide="play" class="btn-icon"></i> Analyze</button>
+            </div>
+            <div class="detector-result hidden mt-4" id="resultMalware"></div>
+          </div>
+
+          <div class="flex-col gap-4">
+            <!-- Network Anomaly -->
+            <div class="card detector-card" id="detectorNetwork">
+              <div class="card-header border-b pb-4 mb-4">
+                <div class="flex-align-center gap-3">
+                  <div class="icon-box bg-green-light text-green"><i data-lucide="activity"></i></div>
+                  <div>
+                    <h3 class="card-title">Network Anomaly</h3>
+                    <p class="text-sm text-muted">Detect unusual traffic patterns</p>
+                  </div>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group"><label>Src Bytes</label><input type="number" id="net_src_bytes" value="1024" class="form-input"/></div>
+                <div class="form-group"><label>Dst Bytes</label><input type="number" id="net_dst_bytes" value="4096" class="form-input"/></div>
+                <div class="form-group"><label>Duration (s)</label><input type="number" id="net_duration" value="30" step="0.1" class="form-input"/></div>
+                <div class="form-group"><label>Connections</label><input type="number" id="net_num_conn" value="12" class="form-input"/></div>
+                <div class="form-group"><label>Packet Rate</label><input type="number" id="net_pkt_rate" value="85" step="0.1" class="form-input"/></div>
+                <div class="form-group">
+                  <label>Protocol</label>
+                  <select id="net_proto" class="form-input"><option value="0">TCP</option><option value="1">UDP</option><option value="2">ICMP</option></select>
+                </div>
+                <div class="form-group">
+                  <label>Flag</label>
+                  <select id="net_flag" class="form-input"><option value="0">SF</option><option value="1">S0</option><option value="2">REJ</option><option value="3">RSTO</option></select>
+                </div>
+              </div>
+              <div class="detector-actions mt-4 pt-4 border-t">
+                <button class="btn btn-secondary" onclick="demoNetwork()">Demo</button>
+                <button class="btn btn-primary" id="btnNetwork" onclick="runNetworkDetect()"><i data-lucide="play" class="btn-icon"></i> Analyze</button>
+              </div>
+              <div class="detector-result hidden mt-4" id="resultNetwork"></div>
+            </div>
+
+            <!-- Phishing Detection -->
+            <div class="card detector-card" id="detectorPhishing">
+              <div class="card-header border-b pb-4 mb-4">
+                <div class="flex-align-center gap-3">
+                  <div class="icon-box bg-amber-light text-amber"><i data-lucide="mail-warning"></i></div>
+                  <div>
+                    <h3 class="card-title">Phishing Detection</h3>
+                    <p class="text-sm text-muted">NLP-based email analysis</p>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group mb-3">
+                <label>Email Content</label>
+                <textarea id="phish_text" class="form-input form-textarea" rows="4" placeholder="Paste email subject and body..."></textarea>
+              </div>
+              <div class="form-group mb-4">
+                <label>Sender Domain</label>
+                <input type="text" id="phish_sender" class="form-input" placeholder="example.com"/>
+              </div>
+              <div class="detector-actions pt-4 border-t">
+                <button class="btn btn-secondary" onclick="demoPhishing()">Demo</button>
+                <button class="btn btn-primary" id="btnPhishing" onclick="runPhishingDetect()"><i data-lucide="play" class="btn-icon"></i> Analyze</button>
+              </div>
+              <div class="detector-result hidden mt-4" id="resultPhishing"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ──────────────── PANEL: LIVE MONITOR ──────────────── -->
+      <section id="panelMonitor" class="panel">
+        <div class="monitor-grid">
+
+          <!-- Charts -->
+          <div class="card chart-card">
+            <div class="card-header mb-2">
+              <h3 class="card-title">CPU Usage</h3>
+              <span class="live-indicator"><span class="dot"></span>Live</span>
+            </div>
+            <div class="chart-wrapper"><canvas id="cpuChart"></canvas></div>
+          </div>
+
+          <div class="card chart-card">
+            <div class="card-header mb-2">
+              <h3 class="card-title">RAM Usage</h3>
+              <span class="live-indicator"><span class="dot"></span>Live</span>
+            </div>
+            <div class="chart-wrapper"><canvas id="ramChart"></canvas></div>
+          </div>
+
+          <div class="card chart-card">
+            <div class="card-header mb-2">
+              <h3 class="card-title">Disk I/O</h3>
+              <span class="live-indicator"><span class="dot"></span>Live</span>
+            </div>
+            <div class="chart-wrapper"><canvas id="diskChart"></canvas></div>
+          </div>
+
+          <!-- Network Packets -->
+          <div class="card col-span-3 lg-col-span-1 h-full flex-col">
+            <div class="card-header border-b pb-3 mb-3">
+              <h3 class="card-title">Network Packets</h3>
+            </div>
+            <div class="feed-container flex-1" id="packetFeed">
+              <div class="empty-row text-center text-muted">Waiting for packets...</div>
+            </div>
+          </div>
+
+          <!-- System Logs -->
+          <div class="card col-span-3 lg-col-span-2 h-full flex-col">
+            <div class="card-header border-b pb-3 mb-3">
+              <h3 class="card-title">System Event Log</h3>
+            </div>
+            <div class="feed-container flex-1" id="logFeed">
+              <div class="empty-row text-center text-muted">Waiting for log events...</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ──────────────── PANEL: ALERTS FEED ──────────────── -->
+      <section id="panelAlerts" class="panel">
+        <div class="card">
+          <div class="card-header border-b pb-4 mb-4">
+            <div class="flex-align-center gap-3">
+              <div class="icon-box bg-red-light text-red"><i data-lucide="alert-triangle"></i></div>
+              <div>
+                <h3 class="card-title">Automated Alerts</h3>
+                <p class="text-sm text-muted">NLP generated SIEM alerts and high-severity detections.</p>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="clearAlerts()"><i data-lucide="trash-2" class="btn-icon"></i> Clear Feed</button>
+          </div>
+          
+          <div id="alertsFeed" class="alerts-feed">
+            <div class="alert-empty text-center py-10">
+              <i data-lucide="check-circle" class="alert-empty-icon text-muted mx-auto" style="width: 48px; height: 48px;"></i>
+              <p class="text-muted mt-2">All systems clear. No active alerts.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ──────────────── PANEL: SCAN HISTORY ──────────────── -->
+      <section id="panelHistory" class="panel">
+        <div class="card">
+          <div class="card-header border-b pb-4 mb-4">
+            <div class="flex-align-center gap-3">
+              <div class="icon-box bg-blue-light text-blue"><i data-lucide="history"></i></div>
+              <div>
+                <h3 class="card-title">Scan History</h3>
+                <p class="text-sm text-muted">Log of all previously executed threat detection scans.</p>
+              </div>
+            </div>
+            <div class="flex-align-center gap-2">
+              <input type="date" class="form-input btn-sm" />
+              <button class="btn btn-secondary btn-sm"><i data-lucide="filter"></i> Filter</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Engine</th>
+                  <th>Target</th>
+                  <th>Result</th>
+                  <th>Score</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="historyTbody">
+                <tr><td colspan="6" class="empty-row">No scan history available. Run a scan to generate history.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ──────────────── PANEL: REPORTS ──────────────── -->
+      <section id="panelReports" class="panel">
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header border-b pb-4 mb-4">
+              <div class="flex-align-center gap-3">
+                <div class="icon-box bg-green-light text-green"><i data-lucide="file-text"></i></div>
+                <div>
+                  <h3 class="card-title">Generate Report</h3>
+                  <p class="text-sm text-muted">Export system data and threat intelligence.</p>
+                </div>
+              </div>
+            </div>
+            <div class="flex-col gap-4">
+              <div class="form-group">
+                <label>Report Type</label>
+                <select class="form-input">
+                  <option>Comprehensive Security Audit</option>
+                  <option>Threat Detection Summary</option>
+                  <option>System Performance Log</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Date Range</label>
+                <select class="form-input">
+                  <option>Last 24 Hours</option>
+                  <option>Last 7 Days</option>
+                  <option>Last 30 Days</option>
+                  <option>Custom Range</option>
+                </select>
+              </div>
+              <div class="detector-actions mt-2">
+                <button class="btn btn-primary flex-1" onclick="alert('Generating PDF Report... (Mock)')"><i data-lucide="download"></i> Download PDF</button>
+                <button class="btn btn-secondary flex-1" onclick="exportCSV()"><i data-lucide="table"></i> Export CSV</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header border-b pb-4 mb-4">
+              <h3 class="card-title">Recent Exports</h3>
+            </div>
+            <div class="flex-col gap-3">
+              <div class="flex-align-center justify-between p-3 border rounded">
+                <div class="flex-col">
+                  <span class="text-sm text-bold">Weekly Audit.pdf</span>
+                  <span class="text-xs text-muted">Today at 09:00 AM</span>
+                </div>
+                <button class="icon-btn"><i data-lucide="download"></i></button>
+              </div>
+              <div class="flex-align-center justify-between p-3 border rounded">
+                <div class="flex-col">
+                  <span class="text-sm text-bold">Threats_Export.csv</span>
+                  <span class="text-xs text-muted">Yesterday at 14:30 PM</span>
+                </div>
+                <button class="icon-btn"><i data-lucide="download"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ──────────────── PANEL: SETTINGS ──────────────── -->
+      <section id="panelSettings" class="panel">
+        <div class="card" style="max-width: 600px;">
+          <div class="card-header border-b pb-4 mb-4">
+            <div class="flex-align-center gap-3">
+              <div class="icon-box bg-amber-light text-amber"><i data-lucide="settings"></i></div>
+              <div>
+                <h3 class="card-title">System Settings</h3>
+                <p class="text-sm text-muted">Configure platform preferences and thresholds.</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex-col gap-4">
+            <div class="form-group">
+              <label>Theme Preference</label>
+              <select class="form-input">
+                <option>Light Theme (Default)</option>
+                <option>Dark Theme</option>
+                <option>System Default</option>
+              </select>
+            </div>
+            <div class="form-group mt-2">
+              <label>Alert Notification Threshold</label>
+              <select class="form-input">
+                <option>Low (All Detections)</option>
+                <option selected>Medium (Suspicious & Above)</option>
+                <option>High (Critical Threats Only)</option>
+              </select>
+            </div>
+            <div class="form-group mt-2">
+              <label>Email Notifications</label>
+              <input type="text" class="form-input" placeholder="admin@cybershield.local" value="admin@cybershield.local" />
+            </div>
+            <div class="form-group mt-2">
+              <label>Data Retention Policy</label>
+              <select class="form-input">
+                <option>30 Days</option>
+                <option selected>90 Days</option>
+                <option>1 Year</option>
+              </select>
+            </div>
+            <div class="pt-4 mt-2 border-t text-right">
+              <button class="btn btn-primary" onclick="alert('Settings saved successfully! (Mock)')"><i data-lucide="save"></i> Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ TOAST ═══════════════════════════════ -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="/static/charts.js"></script>
+<script src="/static/dashboard.js"></script>
+</body>
+</html>
