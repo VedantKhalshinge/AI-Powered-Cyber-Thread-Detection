@@ -141,4 +141,14 @@ project/
 - **System**: psutil, scapy (optional), pynvml (optional)
 - **NLP**: Groq SDK (`llama3-8b-8192`)
 - **Frontend**: Vanilla JS, Chart.js 4, Socket.IO client
-- **Design**: Custom dark cyberpunk CSS, JetBrains Mono, animated SVG gauges
+- **Design**: Minimal Professional Light Theme, Inter Font, Lucide Icons
+
+---
+
+## Credits & Copyright
+
+**Created by Vedant Khalshinge**
+
+&copy; 2026 Vedant Khalshinge. All Rights Reserved.
+
+This project is proprietary and confidential. Unauthorized copying of this file, via any medium, is strictly prohibited. You may not reproduce, distribute, or create derivative works from this project without explicit written permission. See the `LICENSE` file for more details.
